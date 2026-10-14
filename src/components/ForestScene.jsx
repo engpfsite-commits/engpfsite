@@ -1,20 +1,32 @@
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Instances, Instance, OrbitControls, RoundedBox } from '@react-three/drei';
+import { Instances, Instance, OrbitControls } from '@react-three/drei';
 import { useRef } from 'react';
 import * as THREE from 'three';
 import Resident from './Resident';
 import EngineerDesk from './EngineerDesk';
 import { residents } from '../data/residents';
+import {
+  ForestBrook,
+  DistantLandscape,
+  ForestPath,
+  ForestTreeLine,
+  FootBridge,
+  IslandTerrain,
+  OceanSurface,
+  VillageProps,
+  VillageHouse,
+  Waterfall,
+} from './WorldModels';
 
 const FOREST_LIMITS = {
-  minX: -7,
-  maxX: 7,
-  minZ: -7,
-  maxZ: 7,
+  minX: -14,
+  maxX: 14,
+  minZ: -14,
+  maxZ: 14,
 };
 
-const initialCameraPosition = new THREE.Vector3(9, 7, 12);
-const initialTarget = new THREE.Vector3(0, 0.8, 0);
+const initialCameraPosition = new THREE.Vector3(12, 10.5, 14);
+const initialTarget = new THREE.Vector3(0, 0.45, 0);
 
 const clampPoint = (point) =>
   new THREE.Vector3(
@@ -30,50 +42,29 @@ const buildings = [
     description:
       '森の広場にある仕様書作成室。ここでは、曖昧な要件を丁寧に書き起こして、みんなの気持ちが揃う場所です。',
     position: [3.1, 0, -2.2],
+    wallColor: '#ead4a8',
+    roofColor: '#b96d62',
+    trimColor: '#80634d',
+  },
+  {
+    id: 'specification-cafe',
+    name: '仕様書カフェ',
+    description: '作業の合間にひと息つける森のカフェ。机の上には今日の依頼が並んでいます。',
+    position: [-5.15, 0, -2.15],
+    wallColor: '#ead5aa',
+    roofColor: '#548f91',
+    trimColor: '#846044',
+  },
+  {
+    id: 'development-workshop',
+    name: '開発工房',
+    description: '森の工房では、開発依頼を小さな作業に分けて、ひとつずつ形にしています。',
+    position: [4.45, 0, 4.0],
+    wallColor: '#e9c99b',
+    roofColor: '#c66e5b',
+    trimColor: '#795b47',
   },
 ];
-
-const trees = [
-  [-5.1, -4.1, 1.05, 0], [-3.1, -5.3, 0.82, 1], [-0.2, -5.6, 1.12, 2],
-  [2.7, -5.0, 0.86, 0], [5.1, -4.5, 1.04, 1], [-5.5, -1.4, 0.88, 2],
-  [5.7, 1.3, 0.94, 0], [-4.8, 4.0, 1.05, 1], [-1.4, 5.2, 0.82, 2],
-  [2.0, 5.4, 0.96, 0], [5.1, 4.2, 0.82, 2], [-5.9, 1.8, 0.7, 3],
-];
-
-const treeCanopyColors = ['#57966a', '#75ad75', '#91bd7d', '#d995a9'];
-
-function ForestCanopies() {
-  return (
-    <>
-      <Instances limit={trees.length} castShadow receiveShadow>
-        <cylinderGeometry args={[0.16, 0.24, 1, 7]} />
-        <meshStandardMaterial color="#956d51" roughness={0.95} />
-        {trees.map(([x, z, scale], index) => (
-          <Instance key={`trunk-${index}`} position={[x, scale * 0.52, z]} scale={scale} />
-        ))}
-      </Instances>
-
-      {treeCanopyColors.map((color, colorIndex) => {
-        const matchingTrees = trees.filter((tree) => tree[3] === colorIndex);
-        return (
-          <Instances key={color} limit={matchingTrees.length * 4} castShadow receiveShadow>
-            <dodecahedronGeometry args={[0.72, 1]} />
-            <meshStandardMaterial color={color} roughness={0.9} />
-            {matchingTrees.flatMap(([x, z, scale], treeIndex) => {
-              const crownY = 1.38 * scale;
-              return [
-                <Instance key={`${colorIndex}-${treeIndex}-crown`} position={[x, crownY, z]} scale={[scale * 0.93, scale, scale * 0.93]} />,
-                <Instance key={`${colorIndex}-${treeIndex}-left`} position={[x - scale * 0.43, crownY - scale * 0.17, z + scale * 0.08]} scale={scale * 0.73} />,
-                <Instance key={`${colorIndex}-${treeIndex}-right`} position={[x + scale * 0.4, crownY - scale * 0.12, z - scale * 0.06]} scale={scale * 0.7} />,
-                <Instance key={`${colorIndex}-${treeIndex}-top`} position={[x + scale * 0.04, crownY + scale * 0.48, z]} scale={scale * 0.57} />,
-              ];
-            })}
-          </Instances>
-        );
-      })}
-    </>
-  );
-}
 
 const flowerPositions = [
   [-4.2, 0.08, -2.9, 0.8], [-3.4, 0.08, -2.2, 1.1], [-2.8, 0.08, -3.4, 0.75],
@@ -148,75 +139,6 @@ function ForestGrass() {
   );
 }
 
-function ForestGround() {
-  return (
-    <>
-      <mesh position={[0, -0.28, 0]} receiveShadow castShadow>
-        <cylinderGeometry args={[7.8, 8.15, 0.56, 64]} />
-        <meshStandardMaterial color="#8d694d" roughness={1} />
-      </mesh>
-      <mesh position={[0, 0.005, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <circleGeometry args={[7.8, 64]} />
-        <meshStandardMaterial color="#9fc981" roughness={1} />
-      </mesh>
-      <mesh position={[0, 0.012, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <ringGeometry args={[7.68, 7.82, 64]} />
-        <meshStandardMaterial color="#c6a77a" roughness={0.95} />
-      </mesh>
-    </>
-  );
-}
-
-function SpecificationHouse({ building, onClick }) {
-  return (
-    <group position={building.position} onClick={onClick}>
-      <RoundedBox args={[2.35, 0.22, 2.05]} radius={0.08} position={[0, 0.14, 0]} castShadow receiveShadow>
-        <meshStandardMaterial color="#a77c5b" roughness={0.9} />
-      </RoundedBox>
-      <RoundedBox args={[2.05, 1.5, 1.72]} radius={0.1} position={[0, 1, 0]} castShadow receiveShadow>
-        <meshStandardMaterial color="#f1d9a9" roughness={0.88} />
-      </RoundedBox>
-      <RoundedBox args={[0.56, 1.04, 0.09]} radius={0.08} position={[0, 0.78, 0.9]} castShadow>
-        <meshStandardMaterial color="#8e6248" roughness={0.88} />
-      </RoundedBox>
-      <mesh position={[0, 1.14, 0.96]}>
-        <circleGeometry args={[0.045, 10]} />
-        <meshStandardMaterial color="#f6d66e" emissive="#d99645" emissiveIntensity={0.24} />
-      </mesh>
-      {[-0.64, 0.64].map((x) => (
-        <group key={x} position={[x, 1.18, 0.9]}>
-          <RoundedBox args={[0.48, 0.48, 0.08]} radius={0.06} castShadow>
-            <meshStandardMaterial color="#fff1cf" roughness={0.7} />
-          </RoundedBox>
-          <mesh position={[0, 0, 0.05]}>
-            <planeGeometry args={[0.34, 0.34]} />
-            <meshStandardMaterial color="#9ac7cf" roughness={0.55} />
-          </mesh>
-          <mesh position={[0, 0, 0.07]}>
-            <boxGeometry args={[0.045, 0.39, 0.025]} />
-            <meshStandardMaterial color="#fff0d0" />
-          </mesh>
-        </group>
-      ))}
-      <mesh position={[0, 1.78, 0]} rotation={[0, Math.PI / 4, 0]} castShadow receiveShadow>
-        <coneGeometry args={[1.68, 1.08, 4]} />
-        <meshStandardMaterial color="#c97669" roughness={0.92} />
-      </mesh>
-      <mesh position={[0.72, 2.14, -0.35]} castShadow>
-        <cylinderGeometry args={[0.16, 0.2, 0.62, 8]} />
-        <meshStandardMaterial color="#b77963" roughness={0.9} />
-      </mesh>
-      <RoundedBox args={[0.9, 0.32, 0.08]} radius={0.04} position={[0, 1.92, 1.02]} castShadow>
-        <meshStandardMaterial color="#7b8d66" roughness={0.9} />
-      </RoundedBox>
-      <mesh position={[0, 1.92, 1.071]}>
-        <planeGeometry args={[0.78, 0.2]} />
-        <meshStandardMaterial color="#f4e5bc" />
-      </mesh>
-    </group>
-  );
-}
-
 function ForestWorld({ onResidentClick, onBuildingClick, onUserGesture }) {
   const controlsRef = useRef(null);
 
@@ -258,13 +180,13 @@ function ForestWorld({ onResidentClick, onBuildingClick, onUserGesture }) {
   return (
     <>
       <color attach="background" args={['#d9edf0']} />
-      <fog attach="fog" args={['#d9edf0', 18, 34]} />
+      <fog attach="fog" args={['#d9edf0', 30, 82]} />
       <hemisphereLight args={['#fff4d9', '#73966a', 1.15]} />
-      <ambientLight intensity={0.45} color="#fff4dc" />
+      <ambientLight intensity={0.58} color="#fff4dc" />
       <directionalLight
         castShadow
         position={[-5, 11, 7]}
-        intensity={2.1}
+        intensity={1.75}
         color="#ffe8b0"
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
@@ -274,12 +196,19 @@ function ForestWorld({ onResidentClick, onBuildingClick, onUserGesture }) {
         shadow-camera-bottom={-11}
         shadow-bias={-0.00015}
         shadow-normalBias={0.035}
-        shadow-radius={4}
+        shadow-radius={7}
       />
 
       <group position={[0, -0.8, 0]}>
-        <ForestGround />
-        <ForestCanopies />
+        <DistantLandscape />
+        <OceanSurface />
+        <IslandTerrain />
+        <ForestTreeLine />
+        <ForestBrook />
+        <Waterfall />
+        <ForestPath />
+        <FootBridge />
+        <VillageProps />
         <ForestGrass />
         <FlowerPatch color="#e89eb1" positions={flowerPositions.slice(0, 10)} />
         <FlowerPatch color="#f1ce7c" positions={flowerPositions.slice(10, 20)} />
@@ -323,7 +252,7 @@ function ForestWorld({ onResidentClick, onBuildingClick, onUserGesture }) {
         ))}
 
         {buildings.map((building) => (
-          <SpecificationHouse
+          <VillageHouse
             key={building.id}
             building={building}
             onClick={(event) => {
@@ -362,7 +291,7 @@ function ForestWorld({ onResidentClick, onBuildingClick, onUserGesture }) {
         enableRotate
         enableZoom
         minDistance={5}
-        maxDistance={18}
+        maxDistance={28}
         minPolarAngle={0.7}
         maxPolarAngle={1.35}
         target={[initialTarget.x, initialTarget.y, initialTarget.z]}
@@ -381,7 +310,7 @@ export default function ForestScene({ onResidentClick, onBuildingClick, onUserGe
       <Canvas
         shadows
         dpr={[1, 1.5]}
-        camera={{ position: [initialCameraPosition.x, initialCameraPosition.y, initialCameraPosition.z], fov: 42 }}
+        camera={{ position: [initialCameraPosition.x, initialCameraPosition.y, initialCameraPosition.z], fov: 46 }}
         onPointerMissed={() => onUserGesture?.()}
       >
         <ForestWorld
