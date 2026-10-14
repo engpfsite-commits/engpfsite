@@ -1,101 +1,74 @@
 import { Canvas, useFrame } from '@react-three/fiber';
-import { RoundedBox } from '@react-three/drei';
-import { useEffect, useRef } from 'react';
+import { OrbitControls, RoundedBox } from '@react-three/drei';
+import { useRef } from 'react';
 import * as THREE from 'three';
 import Resident from './Resident';
 import EngineerDesk from './EngineerDesk';
 import { residents } from '../data/residents';
 
-function ForestWorld({ onResidentClick, joystick }) {
-  const playerRef = useRef();
-  const keys = useRef({});
-  const lastTalkTime = useRef(0);
-  const playerPosition = useRef({ x: 0, z: 0 });
+const FOREST_LIMITS = {
+  minX: -7,
+  maxX: 7,
+  minZ: -7,
+  maxZ: 7,
+};
 
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyE'].includes(event.code)) {
-        event.preventDefault();
-      }
-      keys.current[event.code] = true;
-    };
+const initialCameraPosition = new THREE.Vector3(9, 7, 12);
+const initialTarget = new THREE.Vector3(0, 0.8, 0);
 
-    const handleKeyUp = (event) => {
-      keys.current[event.code] = false;
-    };
+const clampPoint = (point) =>
+  new THREE.Vector3(
+    THREE.MathUtils.clamp(point.x, FOREST_LIMITS.minX, FOREST_LIMITS.maxX),
+    THREE.MathUtils.clamp(point.y, 1.2, 18),
+    THREE.MathUtils.clamp(point.z, FOREST_LIMITS.minZ, FOREST_LIMITS.maxZ),
+  );
 
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
+const buildings = [
+  {
+    id: 'engineering-desk',
+    name: '仕様書作成室',
+    description:
+      '森の端にある作業台。ここでは、曖昧な要件を丁寧に書き起こして、みんなの気持ちが揃う場所です。',
+    position: [5.4, 0, -2.2],
+  },
+];
 
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, []);
+function ForestWorld({ onResidentClick, onBuildingClick, onUserGesture }) {
+  const controlsRef = useRef(null);
 
-  useFrame((state, delta) => {
-    const moveX =
-      (keys.current.KeyD || keys.current.ArrowRight ? 1 : 0) -
-      (keys.current.KeyA || keys.current.ArrowLeft ? 1 : 0) +
-      joystick.x;
+  const handleGroundDoubleClick = (event) => {
+    event.stopPropagation();
+    onUserGesture?.();
 
-    const moveZ =
-      (keys.current.KeyW || keys.current.ArrowUp ? 1 : 0) -
-      (keys.current.KeyS || keys.current.ArrowDown ? 1 : 0) +
-      -joystick.y;
-
-    const moveLength = Math.hypot(moveX, moveZ);
-    const directionX = moveLength > 0 ? moveX / moveLength : 0;
-    const directionZ = moveLength > 0 ? moveZ / moveLength : 0;
-
-    const speed = 2.8;
-    playerPosition.current.x = THREE.MathUtils.clamp(
-      playerPosition.current.x + directionX * speed * delta,
-      -6.5,
-      6.5,
-    );
-    playerPosition.current.z = THREE.MathUtils.clamp(
-      playerPosition.current.z + directionZ * speed * delta,
-      -6.7,
-      6.7,
-    );
-
-    if (playerRef.current) {
-      playerRef.current.position.set(playerPosition.current.x, 0.38, playerPosition.current.z);
-
-      if (moveLength > 0.01) {
-        playerRef.current.rotation.y = Math.atan2(directionX, directionZ);
-      }
+    if (!controlsRef.current) {
+      return;
     }
+
+    const clickedPoint = clampPoint(event.point.clone());
+    const cameraOffset = controlsRef.current.object.position
+      .clone()
+      .sub(controlsRef.current.target.clone());
+
+    controlsRef.current.target.lerp(clickedPoint.setY(0.8), 0.18);
+    controlsRef.current.object.position.lerp(clickedPoint.clone().setY(0.8).add(cameraOffset), 0.18);
+  };
+
+  useFrame((state) => {
+    if (!controlsRef.current) {
+      return;
+    }
+
+    const target = controlsRef.current.target;
+    const clampedTarget = clampPoint(target.clone());
+    target.x = THREE.MathUtils.lerp(target.x, clampedTarget.x, 0.15);
+    target.y = THREE.MathUtils.lerp(target.y, clampedTarget.y, 0.15);
+    target.z = THREE.MathUtils.lerp(target.z, clampedTarget.z, 0.15);
 
     const camera = state.camera;
-    const cameraTarget = new THREE.Vector3(
-      playerPosition.current.x,
-      1.2,
-      playerPosition.current.z,
-    );
-    const desiredPosition = new THREE.Vector3(
-      playerPosition.current.x,
-      5.2,
-      playerPosition.current.z + 7.2,
-    );
-
-    camera.position.lerp(desiredPosition, 1 - Math.exp(-delta * 4));
-    camera.lookAt(cameraTarget);
-
-    lastTalkTime.current = Math.max(0, lastTalkTime.current - delta);
-
-    if (keys.current.KeyE || keys.current.KeyQ) {
-      const nearestResident = residents.find((resident) => {
-        const [rx, , rz] = resident.position;
-        return Math.hypot(playerPosition.current.x - rx, playerPosition.current.z - rz) < 1.5;
-      });
-
-      if (nearestResident && lastTalkTime.current === 0) {
-        onResidentClick(nearestResident);
-        lastTalkTime.current = 0.4;
-      }
-    }
+    const clampedCamera = clampPoint(camera.position.clone());
+    camera.position.x = THREE.MathUtils.lerp(camera.position.x, clampedCamera.x, 0.15);
+    camera.position.y = THREE.MathUtils.lerp(camera.position.y, clampedCamera.y, 0.15);
+    camera.position.z = THREE.MathUtils.lerp(camera.position.z, clampedCamera.z, 0.15);
   });
 
   return (
@@ -165,36 +138,88 @@ function ForestWorld({ onResidentClick, joystick }) {
           <Resident
             key={resident.id}
             resident={resident}
-            onSelect={onResidentClick}
+            onSelect={(clickedResident) => {
+              onUserGesture?.();
+              onResidentClick(clickedResident);
+            }}
           />
         ))}
 
-        <EngineerDesk />
+        {buildings.map((building) => (
+          <group
+            key={building.id}
+            position={building.position}
+            onClick={(event) => {
+              event.stopPropagation();
+              onUserGesture?.();
+              onBuildingClick(building);
+            }}
+          >
+            <mesh castShadow receiveShadow position={[0, 0.8, 0]}>
+              <boxGeometry args={[1.5, 1.2, 1.2]} />
+              <meshStandardMaterial color="#c7d5ff" />
+            </mesh>
+            <mesh castShadow position={[0, 1.7, 0]}>
+              <boxGeometry args={[1.7, 0.16, 1.4]} />
+              <meshStandardMaterial color="#a0b0ee" />
+            </mesh>
+          </group>
+        ))}
 
-        <group ref={playerRef} position={[0, 0.38, 0]}>
-          <mesh castShadow position={[0, 0.7, 0]}>
-            <sphereGeometry args={[0.42, 24, 24]} />
-            <meshStandardMaterial color="#f4d3a9" />
-          </mesh>
-          <mesh castShadow position={[0, 1.15, 0.12]}>
-            <sphereGeometry args={[0.22, 18, 18]} />
-            <meshStandardMaterial color="#f4d3a9" />
-          </mesh>
-          <mesh castShadow position={[0, 0.28, 0.42]}>
-            <boxGeometry args={[0.46, 0.16, 0.22]} />
-            <meshStandardMaterial color="#f5f3ee" />
-          </mesh>
-        </group>
+        <EngineerDesk
+          onSelect={(clickedBuilding) => {
+            onUserGesture?.();
+            onBuildingClick(clickedBuilding);
+          }}
+        />
+
+        <mesh
+          rotation={[-Math.PI / 2, 0, 0]}
+          receiveShadow
+          onDoubleClick={handleGroundDoubleClick}
+          onContextMenu={(event) => event.preventDefault()}
+        >
+          <planeGeometry args={[30, 30]} />
+          <meshStandardMaterial color="#a8d58d" transparent opacity={0.01} />
+        </mesh>
       </group>
+
+      <OrbitControls
+        ref={controlsRef}
+        makeDefault
+        enableDamping
+        dampingFactor={0.08}
+        enablePan
+        enableRotate
+        enableZoom
+        minDistance={5}
+        maxDistance={18}
+        minPolarAngle={0.7}
+        maxPolarAngle={1.35}
+        target={[initialTarget.x, initialTarget.y, initialTarget.z]}
+        mouseButtons={{ LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN }}
+        touches={{ ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN }}
+        onStart={onUserGesture}
+        onChange={onUserGesture}
+      />
     </>
   );
 }
 
-export default function ForestScene({ onResidentClick, joystick }) {
+export default function ForestScene({ onResidentClick, onBuildingClick, onUserGesture }) {
   return (
     <div className="scene-wrap">
-      <Canvas shadows camera={{ position: [0, 5.2, 7.2], fov: 42 }}>
-        <ForestWorld onResidentClick={onResidentClick} joystick={joystick} />
+      <Canvas
+        shadows
+        dpr={[1, 2]}
+        camera={{ position: [initialCameraPosition.x, initialCameraPosition.y, initialCameraPosition.z], fov: 42 }}
+        onPointerMissed={() => onUserGesture?.()}
+      >
+        <ForestWorld
+          onResidentClick={onResidentClick}
+          onBuildingClick={onBuildingClick}
+          onUserGesture={onUserGesture}
+        />
       </Canvas>
     </div>
   );

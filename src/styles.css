@@ -41,6 +41,7 @@ button {
 .scene-wrap {
   width: 100%;
   height: 100%;
+  touch-action: none;
 }
 
 .scene-wrap canvas {
@@ -59,40 +60,55 @@ button {
   background: rgba(255, 255, 255, 0.74);
   border: 1px solid rgba(25, 72, 46, 0.12);
   color: #2a533b;
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   letter-spacing: 0.04em;
   box-shadow: 0 10px 20px rgba(33, 48, 34, 0.09);
   backdrop-filter: blur(8px);
+  max-width: min(72vw, 560px);
 }
 
-.touch-pad {
+.bgm-controls {
   position: absolute;
-  left: 18px;
-  bottom: 18px;
+  top: 16px;
+  right: 16px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(30, 73, 44, 0.14);
+  box-shadow: 0 12px 24px rgba(31, 65, 42, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.bgm-toggle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  color: #214d39;
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow: 0 8px 16px rgba(31, 65, 42, 0.08);
+}
+
+.bgm-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #2a533b;
+  font-size: 0.74rem;
+}
+
+.bgm-slider-wrap input {
   width: 110px;
-  height: 110px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
-  border: 1px solid rgba(31, 67, 42, 0.12);
-  box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.3);
-  touch-action: none;
-  z-index: 15;
-  display: none;
 }
 
-.touch-pad-knob {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: rgba(252, 255, 255, 0.9);
-  box-shadow: 0 10px 18px rgba(17, 47, 27, 0.14);
-  transform: translate(-50%, -50%);
-}
-
-.talk-window {
+.talk-window,
+.detail-window {
   position: absolute;
   left: 50%;
   bottom: 20px;
@@ -149,20 +165,26 @@ button {
 }
 
 @media (max-width: 768px) {
-  .touch-pad {
-    display: block;
+  .bgm-controls {
+    top: 12px;
+    right: 12px;
+    padding: 8px 10px;
+  }
+
+  .bgm-slider-wrap {
+    display: none;
   }
 
   .controls-hint {
-    right: 16px;
-    left: auto;
-    bottom: 24px;
-    width: max-content;
-    max-width: 56vw;
-    font-size: 0.7rem;
+    left: 12px;
+    bottom: 14px;
+    max-width: 68vw;
+    font-size: 0.66rem;
+    line-height: 1.5;
   }
 
-  .talk-window {
+  .talk-window,
+  .detail-window {
     bottom: 14px;
     width: min(92vw, 420px);
     padding: 16px 14px 12px;

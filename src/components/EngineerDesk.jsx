@@ -1,10 +1,21 @@
 import { Float, RoundedBox } from '@react-three/drei';
 
-// 作業スペースの見た目を表すコンポーネント。
-// 仕様書の山を積み上げたエンジニアの隅を、かわいく演出する。
-export default function EngineerDesk() {
+const building = {
+  id: 'engineer-desk',
+  name: '仕様書作成室',
+  description:
+    '森の中央の作業台。ここでは、曖昧な要件を丁寧に書き起こし、みんなの気持ちが揃う場所です。',
+};
+
+export default function EngineerDesk({ onSelect }) {
   return (
-    <group position={[5.3, 0, -2.2]}>
+    <group
+      position={[5.3, 0, -2.2]}
+      onClick={(event) => {
+        event.stopPropagation();
+        onSelect?.(building);
+      }}
+    >
       <RoundedBox args={[2.3, 0.6, 1.6]} radius={0.12} position={[0, 0.4, 0]}>
         <meshStandardMaterial color="#d8b38d" />
       </RoundedBox>
