@@ -1,6 +1,6 @@
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Instances, Instance, OrbitControls } from '@react-three/drei';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import * as THREE from 'three';
 import Resident from './Resident';
 import EngineerDesk from './EngineerDesk';
@@ -13,6 +13,7 @@ import {
   FootBridge,
   IslandTerrain,
   OceanSurface,
+  OpeningTitle,
   VillageProps,
   VillageHouse,
   Waterfall,
@@ -27,6 +28,34 @@ const FOREST_LIMITS = {
 
 const initialCameraPosition = new THREE.Vector3(12, 10.5, 14);
 const initialTarget = new THREE.Vector3(0, 0.45, 0);
+const introFrames = [
+  { time: 0, position: new THREE.Vector3(0, 18, 26), target: new THREE.Vector3(0, 7.3, 6.8) },
+  { time: 2, position: new THREE.Vector3(0, 12, 17), target: new THREE.Vector3(0, 7.7, 8) },
+  { time: 4, position: new THREE.Vector3(0, 8.5, 10.8), target: new THREE.Vector3(0, 8, 8.5) },
+  { time: 5, position: new THREE.Vector3(0, 7.5, 4), target: new THREE.Vector3(0, 3, 0) },
+  { time: 6, position: new THREE.Vector3(5, 7, 8), target: new THREE.Vector3(0, 2, 0) },
+  { time: 7, position: initialCameraPosition, target: initialTarget },
+];
+
+function interpolateIntro(elapsed, position, target) {
+  let frameIndex = introFrames.findIndex((frame) => frame.time >= elapsed);
+  frameIndex = Math.max(1, frameIndex);
+  const start = introFrames[frameIndex - 1];
+  const end = introFrames[frameIndex];
+  const linear = THREE.MathUtils.clamp((elapsed - start.time) / (end.time - start.time), 0, 1);
+  let progress = linear;
+
+  if (end.time <= 2) {
+    progress = 0.5 - Math.cos(linear * Math.PI) * 0.5;
+  } else if (start.time >= 2 && end.time <= 4) {
+    progress = linear * linear * linear;
+  } else if (start.time >= 5) {
+    progress = linear * linear * (3 - 2 * linear);
+  }
+
+  position.lerpVectors(start.position, end.position, progress);
+  target.lerpVectors(start.target, end.target, progress);
+}
 
 const clampPoint = (point) =>
   new THREE.Vector3(
@@ -139,11 +168,18 @@ function ForestGrass() {
   );
 }
 
-function ForestWorld({ onResidentClick, onBuildingClick, onUserGesture }) {
+function ForestWorld({ onResidentClick, onBuildingClick, onUserGesture, introFinished, onIntroComplete }) {
   const controlsRef = useRef(null);
+  const introStartRef = useRef(null);
+  const introPositionRef = useRef(new THREE.Vector3());
+  const introTargetRef = useRef(new THREE.Vector3());
+  const introAppliedRef = useRef(false);
 
   const handleGroundDoubleClick = (event) => {
     event.stopPropagation();
+    if (!introFinished) {
+      return;
+    }
     onUserGesture?.();
 
     if (!controlsRef.current) {
@@ -165,12 +201,44 @@ function ForestWorld({ onResidentClick, onBuildingClick, onUserGesture }) {
     }
 
     const target = controlsRef.current.target;
+    const camera = state.camera;
+
+    if (!introFinished) {
+      if (introStartRef.current === null) {
+        introStartRef.current = state.clock.elapsedTime;
+      }
+
+      const elapsed = state.clock.elapsedTime - introStartRef.current;
+      if (elapsed >= 7) {
+        camera.position.copy(initialCameraPosition);
+        target.copy(initialTarget);
+        camera.lookAt(initialTarget);
+        camera.updateMatrixWorld();
+        controlsRef.current.update();
+        onIntroComplete();
+        return;
+      }
+
+      interpolateIntro(elapsed, introPositionRef.current, introTargetRef.current);
+      camera.position.copy(introPositionRef.current);
+      target.copy(introTargetRef.current);
+      camera.lookAt(introTargetRef.current);
+      camera.updateMatrixWorld();
+      return;
+    }
+
+    if (!introAppliedRef.current) {
+      camera.position.copy(initialCameraPosition);
+      target.copy(initialTarget);
+      controlsRef.current.update();
+      introAppliedRef.current = true;
+    }
+
     const clampedTarget = clampPoint(target.clone());
     target.x = THREE.MathUtils.lerp(target.x, clampedTarget.x, 0.15);
     target.y = THREE.MathUtils.lerp(target.y, clampedTarget.y, 0.15);
     target.z = THREE.MathUtils.lerp(target.z, clampedTarget.z, 0.15);
 
-    const camera = state.camera;
     const clampedCamera = clampPoint(camera.position.clone());
     camera.position.x = THREE.MathUtils.lerp(camera.position.x, clampedCamera.x, 0.15);
     camera.position.y = THREE.MathUtils.lerp(camera.position.y, clampedCamera.y, 0.15);
@@ -201,6 +269,7 @@ function ForestWorld({ onResidentClick, onBuildingClick, onUserGesture }) {
 
       <group position={[0, -0.8, 0]}>
         <DistantLandscape />
+        <OpeningTitle introFinished={introFinished} />
         <OceanSurface />
         <IslandTerrain />
         <ForestTreeLine />
@@ -245,6 +314,9 @@ function ForestWorld({ onResidentClick, onBuildingClick, onUserGesture }) {
             key={resident.id}
             resident={resident}
             onSelect={(clickedResident) => {
+              if (!introFinished) {
+                return;
+              }
               onUserGesture?.();
               onResidentClick(clickedResident);
             }}
@@ -257,6 +329,9 @@ function ForestWorld({ onResidentClick, onBuildingClick, onUserGesture }) {
             building={building}
             onClick={(event) => {
               event.stopPropagation();
+              if (!introFinished) {
+                return;
+              }
               onUserGesture?.();
               onBuildingClick(building);
             }}
@@ -265,6 +340,9 @@ function ForestWorld({ onResidentClick, onBuildingClick, onUserGesture }) {
 
         <EngineerDesk
           onSelect={(clickedBuilding) => {
+            if (!introFinished) {
+              return;
+            }
             onUserGesture?.();
             onBuildingClick(clickedBuilding);
           }}
@@ -285,6 +363,7 @@ function ForestWorld({ onResidentClick, onBuildingClick, onUserGesture }) {
       <OrbitControls
         ref={controlsRef}
         makeDefault
+        enabled={introFinished}
         enableDamping
         dampingFactor={0.08}
         enablePan
@@ -297,14 +376,24 @@ function ForestWorld({ onResidentClick, onBuildingClick, onUserGesture }) {
         target={[initialTarget.x, initialTarget.y, initialTarget.z]}
         mouseButtons={{ LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN }}
         touches={{ ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN }}
-        onStart={onUserGesture}
-        onChange={onUserGesture}
+        onStart={() => {
+          if (introFinished) {
+            onUserGesture?.();
+          }
+        }}
+        onChange={() => {
+          if (introFinished) {
+            onUserGesture?.();
+          }
+        }}
       />
     </>
   );
 }
 
 export default function ForestScene({ onResidentClick, onBuildingClick, onUserGesture }) {
+  const [introFinished, setIntroFinished] = useState(false);
+
   return (
     <div className="scene-wrap">
       <Canvas
@@ -317,8 +406,15 @@ export default function ForestScene({ onResidentClick, onBuildingClick, onUserGe
           onResidentClick={onResidentClick}
           onBuildingClick={onBuildingClick}
           onUserGesture={onUserGesture}
+          introFinished={introFinished}
+          onIntroComplete={() => setIntroFinished(true)}
         />
       </Canvas>
+      {!introFinished && (
+        <button className="intro-skip" type="button" onClick={() => setIntroFinished(true)}>
+          スキップ
+        </button>
+      )}
     </div>
   );
 }

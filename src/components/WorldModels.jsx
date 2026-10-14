@@ -1,5 +1,6 @@
-import { Instances, Instance, RoundedBox } from '@react-three/drei';
-import { useMemo } from 'react';
+import { Instances, Instance, RoundedBox, Text } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
+import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 
 const treeVariants = [
@@ -347,6 +348,130 @@ export function VillageProps() {
       <GardenFence position={[5.8, 0, 2.8]} length={2.5} rotation={Math.PI / 2} />
       <GardenFence position={[-1.3, 0, 5.9]} length={2.2} rotation={0} />
     </>
+  );
+}
+
+export function OpeningTitle({ introFinished }) {
+  const titleRef = useRef(null);
+  const persistentStartRef = useRef(null);
+  const persistentOriginRef = useRef(new THREE.Vector3());
+  const persistentRotationRef = useRef(0);
+  const persistentPosition = useRef(new THREE.Vector3(0, 7, 0));
+  const leaves = [
+    [-5.3, 1.38, 0.44, -0.45], [-4.65, 1.65, 0.5, 0.25], [-3.8, 1.62, 0.47, -0.2],
+    [3.8, 1.62, 0.47, 0.2], [4.65, 1.65, 0.5, -0.25], [5.3, 1.38, 0.44, 0.45],
+    [-5.4, -1.36, 0.48, 0.55], [-4.6, -1.62, 0.5, -0.18],
+    [4.6, -1.62, 0.5, 0.18], [5.4, -1.36, 0.48, -0.55],
+  ];
+
+  useFrame((state) => {
+    if (!titleRef.current) {
+      return;
+    }
+
+    const elapsed = state.clock.elapsedTime;
+    let opacity;
+
+    if (introFinished) {
+      if (persistentStartRef.current === null) {
+        persistentStartRef.current = elapsed;
+        persistentOriginRef.current.copy(titleRef.current.position);
+        persistentRotationRef.current = titleRef.current.rotation.z;
+      }
+
+      const progress = THREE.MathUtils.clamp((elapsed - persistentStartRef.current) / 0.7, 0, 1);
+      const eased = progress * progress * (3 - 2 * progress);
+      titleRef.current.position.lerpVectors(persistentOriginRef.current, persistentPosition.current, eased);
+      titleRef.current.rotation.z = THREE.MathUtils.lerp(persistentRotationRef.current, 0, eased);
+      titleRef.current.scale.setScalar(THREE.MathUtils.lerp(1, 0.36, eased));
+      opacity = eased;
+    } else {
+      persistentStartRef.current = null;
+      titleRef.current.position.set(0, 8.1 + Math.sin(elapsed * 2.1) * 0.14, 8.5);
+      titleRef.current.rotation.z = Math.sin(elapsed * 1.35) * 0.012;
+      titleRef.current.scale.setScalar(1);
+      opacity = THREE.MathUtils.clamp(1 - Math.max(0, elapsed - 4) / 1, 0, 1);
+    }
+
+    titleRef.current.visible = opacity > 0.001;
+    titleRef.current.traverse((object) => {
+      if (!object.material) {
+        return;
+      }
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      materials.forEach((material) => {
+        material.transparent = true;
+        material.opacity = opacity;
+      });
+    });
+  });
+
+  return (
+    <group ref={titleRef} position={[0, 8.1, 8.5]}>
+      <RoundedBox args={[11.8, 4.05, 0.48]} radius={0.34} position={[0, 0, -0.32]} castShadow receiveShadow>
+        <meshStandardMaterial color="#805039" roughness={0.9} />
+      </RoundedBox>
+      <RoundedBox args={[11.46, 3.72, 0.22]} radius={0.29} position={[0, 0, -0.025]} castShadow>
+        <meshStandardMaterial color="#c78d4c" roughness={0.82} />
+      </RoundedBox>
+      <RoundedBox args={[11.1, 3.39, 0.12]} radius={0.25} position={[0, 0, 0.14]}>
+        <meshStandardMaterial color="#e9c887" roughness={0.92} />
+      </RoundedBox>
+
+      {[-1, 1].map((side) => (
+        <group key={`title-vine-${side}`} position={[side * 5.37, 0, 0.27]}>
+          {[-1.1, -0.45, 0.25, 0.92].map((y, index) => (
+            <mesh key={y} position={[side * (index % 2 ? -0.08 : 0.08), y, 0]} rotation={[0, 0, side * 0.45]}>
+              <icosahedronGeometry args={[1, 0]} />
+              <meshStandardMaterial color={index % 2 ? '#4b8b54' : '#6da85f'} roughness={0.91} flatShading />
+            </mesh>
+          ))}
+        </group>
+      ))}
+
+      {leaves.map(([x, y, scale, rotation], index) => (
+        <mesh key={`title-leaf-${index}`} position={[x, y, 0.28]} rotation={[0.12, rotation, rotation]} scale={[scale * 0.58, scale * 0.2, scale]} castShadow>
+          <icosahedronGeometry args={[1, 0]} />
+          <meshStandardMaterial color={index % 3 === 0 ? '#78ad61' : '#4d9153'} roughness={0.92} flatShading />
+        </mesh>
+      ))}
+
+      <Text
+        position={[0, 0.86, 0.235]}
+        fontSize={1.22}
+        anchorX="center"
+        anchorY="middle"
+        color="#fff1c9"
+        outlineWidth={0.065}
+        outlineColor="#70432e"
+        letterSpacing={0.02}
+        castShadow
+      >
+        集まれ！
+      </Text>
+      <Text
+        position={[0, -0.62, 0.235]}
+        fontSize={1.78}
+        anchorX="center"
+        anchorY="middle"
+        color="#fff7de"
+        outlineWidth={0.075}
+        outlineColor="#70432e"
+        letterSpacing={0.015}
+        castShadow
+      >
+        仕様書の森
+      </Text>
+
+      <mesh position={[-5.12, 1.66, 0.36]} rotation={[0, 0, -0.22]} castShadow>
+        <dodecahedronGeometry args={[0.32, 0]} />
+        <meshStandardMaterial color="#f5d783" roughness={0.84} flatShading />
+      </mesh>
+      <mesh position={[5.1, -1.66, 0.35]} rotation={[0, 0, 0.18]} castShadow>
+        <dodecahedronGeometry args={[0.29, 0]} />
+        <meshStandardMaterial color="#e89d75" roughness={0.88} flatShading />
+      </mesh>
+    </group>
   );
 }
 
