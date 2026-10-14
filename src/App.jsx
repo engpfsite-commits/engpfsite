@@ -1,19 +1,73 @@
 import { useState } from 'react';
 import ForestScene from './components/ForestScene';
 
-// メイン画面。
-// 住民をクリックしたときに発生する会話状態を管理し、UIとして表示する。
 export default function App() {
   const [selectedResident, setSelectedResident] = useState(null);
+  const [virtualMove, setVirtualMove] = useState({ x: 0, y: 0 });
+
+  const setStick = (clientX, clientY, element) => {
+    const rect = element.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const dx = clientX - centerX;
+    const dy = clientY - centerY;
+    const maxDistance = rect.width / 2 - 16;
+    const distance = Math.min(Math.hypot(dx, dy), maxDistance);
+    const angle = Math.atan2(dy, dx);
+    const x = Math.cos(angle) * distance;
+    const y = Math.sin(angle) * distance;
+
+    setVirtualMove({
+      x: Number((x / maxDistance).toFixed(2)),
+      y: Number((y / maxDistance).toFixed(2)),
+    });
+  };
+
+  const handleStickStart = (event) => {
+    event.preventDefault();
+    setStick(event.clientX, event.clientY, event.currentTarget);
+  };
+
+  const handleStickMove = (event) => {
+    if (event.buttons === 0 && event.pointerType !== 'touch') {
+      return;
+    }
+    event.preventDefault();
+    setStick(event.clientX, event.clientY, event.currentTarget);
+  };
+
+  const handleStickEnd = () => {
+    setVirtualMove({ x: 0, y: 0 });
+  };
+
+  const stickX = virtualMove.x * 26;
+  const stickY = virtualMove.y * 26;
 
   return (
-    <div className="app-shell">
-      <div className="hud">
-        <span className="hud-badge" aria-hidden="true" />
-        <span className="hud-title">集まれ仕様書の森</span>
+    <div className="game-root">
+      <ForestScene
+        onResidentClick={setSelectedResident}
+        joystick={virtualMove}
+      />
+
+      <div className="controls-hint">
+        WASD / 矢印キーで移動 • E で話す
       </div>
 
-      <ForestScene onResidentClick={setSelectedResident} />
+      <div
+        className="touch-pad"
+        onPointerDown={handleStickStart}
+        onPointerMove={handleStickMove}
+        onPointerUp={handleStickEnd}
+        onPointerLeave={handleStickEnd}
+        onPointerCancel={handleStickEnd}
+        aria-label="仮想スティック"
+      >
+        <div
+          className="touch-pad-knob"
+          style={{ transform: `translate(${stickX}px, ${stickY}px)` }}
+        />
+      </div>
 
       {selectedResident && (
         <aside className="talk-window" aria-live="polite">
