@@ -10,8 +10,8 @@ const REQUESTS = [
     id: 'site-creator',
     type: 'creator',
     requester: 'サイト制作者からの依頼',
-    title: '森のカフェを紹介するサイト',
-    description: 'メニューや営業時間、森の雰囲気が伝わるWebサイトを作ってほしい！',
+    title: 'どうぶつたちの依頼を管理するサイト',
+    description: 'この森に集まった依頼を、仕様書・スケジュール・成果物までまとめて管理したい！',
     status: '進行中',
     avatar: '制',
   },
@@ -19,12 +19,117 @@ const REQUESTS = [
     id: 'friends',
     type: 'friends',
     requester: '仲良しトリオからの依頼',
-    title: '3人の個性を伝える作品紹介サイト',
-    description: 'それぞれの活動や作品を紹介できる、楽しいサイトを一緒に作ってほしい！',
+    title: '3人それぞれの夢を叶える個別サイト',
+    description: 'エンジニア・アイドル・クリエイター、それぞれの活動を発信したい！',
     status: '未着手',
     avatar: '3人',
   },
 ];
+
+const REQUEST_DETAIL_TABS = [
+  { id: 'overview', label: '概要' },
+  { id: 'specification', label: '仕様書' },
+  { id: 'schedule', label: 'スケジュール' },
+  { id: 'minutes', label: '議事録' },
+  { id: 'deliverables', label: '成果物' },
+];
+
+const REQUEST_DETAILS = {
+  'site-creator': {
+    client: 'サイト制作者',
+    priority: '高',
+    brief: 'この森に集まったどうぶつたちからの依頼をまとめて、サイトとして管理したいんだ！仕様書・スケジュール・議事録・成果物まで一括で確認できるサイトを作ってほしいな。',
+    overview: [
+      ['目的', '依頼の受付から公開後の記録までを一か所で管理する'],
+      ['利用者', 'サイト制作者と3人のどうぶつ住民'],
+      ['優先事項', '依頼の見つけやすさと、進捗・関連記録への移動しやすさ'],
+    ],
+    requirements: [
+      ['依頼一覧', '依頼者・カテゴリ・進捗で検索、絞り込みができる'],
+      ['依頼詳細', '概要、仕様、議事録、成果物を案件ごとにまとめる'],
+      ['スケジュール', '工程と担当、進捗をガントチャート風に確認する'],
+      ['成果物', '完成したサイトや画像、公開先を案件に紐づけて残す'],
+      ['どうぶつ管理', '住民のプロフィールと依頼履歴を確認・編集する'],
+    ],
+    schedule: [
+      { phase: '依頼・要件の整理', status: '完了', progress: 100, tone: 'complete' },
+      { phase: '画面設計・仕様書', status: '進行中', progress: 68, tone: 'active' },
+      { phase: '実装・動作確認', status: 'これから', progress: 0, tone: 'planned' },
+      { phase: '公開・引き継ぎ', status: 'これから', progress: 0, tone: 'planned' },
+    ],
+    minutes: [
+      ['要件確認', '依頼者ごとに、これまでの依頼と進捗を追えるようにする。'],
+      ['画面設計', 'トップ画面に進行中の依頼と今週の予定を表示する。'],
+      ['記録方法', '仕様変更や相談内容を、日付と案件に紐づけて残す。'],
+    ],
+    deliverables: [
+      ['依頼管理ダッシュボード', '進行中の依頼と今週の予定を一覧できる画面'],
+      ['依頼詳細ページ', '仕様・スケジュール・議事録をまとめた案件ページ'],
+      ['成果物ギャラリー', '公開サイトや制作画像を保存・表示する画面'],
+      ['どうぶつ管理画面', '住民プロフィールと依頼履歴を管理する画面'],
+    ],
+  },
+  friends: {
+    client: '仲良しトリオ',
+    priority: '高',
+    brief: 'ぼくたち3人の夢を叶えるサイトを一緒に作ってほしい！エンジニア、アイドル、クリエイターとして、それぞれの活動や作品を自分らしく発信できる場所がほしいな。',
+    overview: [
+      ['目的', '3人それぞれの夢や活動を個別のサイトで発信する'],
+      ['利用者', 'エンジニア、アイドル、クリエイターと訪問者'],
+      ['優先事項', '活動ごとの個性と、更新しやすさを両立する'],
+    ],
+    sites: [
+      {
+        owner: 'いぬ',
+        role: 'エンジニア',
+        title: 'ポートフォリオサイト',
+        summary: 'プロフィール、スキル、制作実績、技術ブログをまとめて紹介。',
+        tone: 'engineer',
+      },
+      {
+        owner: 'うさぎ',
+        role: 'アイドル',
+        title: 'アイドル活動サイト',
+        summary: 'プロフィール、お知らせ、ライブ予定、写真や動画を発信。',
+        tone: 'idol',
+      },
+      {
+        owner: 'ねこ',
+        role: 'クリエイター',
+        title: '作品ギャラリーサイト',
+        summary: 'イラスト、漫画、動画、小説などの作品を展示。',
+        tone: 'creator',
+      },
+    ],
+    requirements: [
+      ['エンジニアのポートフォリオ', 'プロフィール、スキル、制作実績、技術ブログ、問い合わせ先を掲載する'],
+      ['うさぎのアイドル活動', 'アイドルプロフィール、お知らせ、ライブ・イベント予定を発信する'],
+      ['写真・動画ギャラリー', 'アイドル活動の写真や動画を見やすく紹介する'],
+      ['クリエイターの作品展示', 'イラスト、漫画、動画、小説を種類ごとに掲載する'],
+      ['作品の詳細ページ', '制作背景や使用技術、作品ごとの説明を読めるようにする'],
+      ['共通デザイン', '3人の個性を出しつつ、操作や更新方法を統一する'],
+      ['スマートフォン対応', 'スマートフォンからも作品や予定を確認できる'],
+    ],
+    schedule: [
+      { phase: '3人の希望・掲載内容を整理', status: '未着手', progress: 0, tone: 'planned' },
+      { phase: '仕様書とページ構成を作成', status: '未着手', progress: 0, tone: 'planned' },
+      { phase: 'デザイン案を確認・調整', status: '未着手', progress: 0, tone: 'planned' },
+      { phase: '3つのサイトを制作', status: '未着手', progress: 0, tone: 'planned' },
+      { phase: '動作確認・公開', status: '未着手', progress: 0, tone: 'planned' },
+    ],
+    minutes: [
+      ['依頼受付', '3人それぞれの夢や活動を、別々の個人サイトで実現したい。'],
+      ['うさぎのサイトについて', 'アイドルとしてのプロフィールや活動予定、お知らせを中心に発信する。'],
+      ['共通方針', 'サイトごとの色や見せ方は個別にしつつ、スマートフォンでも使いやすくする。'],
+    ],
+    deliverables: [
+      ['エンジニア系サイト', 'スキル・制作実績・技術ブログを掲載するポートフォリオ'],
+      ['アイドル活動サイト', 'プロフィール・お知らせ・ライブ予定・写真や動画の紹介ページ'],
+      ['クリエイター系サイト', 'イラスト・漫画・動画・小説を展示するギャラリー'],
+      ['共通の公開・更新ガイド', '各サイトの更新方法と公開後の運用手順'],
+    ],
+  },
+};
 
 const REQUEST_FILTERS = [
   { id: 'all', label: 'すべて' },
@@ -49,6 +154,8 @@ export default function App() {
   const [currentTrack, setCurrentTrack] = useState('');
   const [requestInboxOpen, setRequestInboxOpen] = useState(false);
   const [requestFilter, setRequestFilter] = useState('all');
+  const [selectedRequestId, setSelectedRequestId] = useState(null);
+  const [requestDetailTab, setRequestDetailTab] = useState('overview');
   const audioRef = useRef(null);
   const queueRef = useRef([]);
   const currentTrackRef = useRef('');
@@ -335,16 +442,27 @@ export default function App() {
 
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
-        setRequestInboxOpen(false);
+        if (selectedRequestId) {
+          setSelectedRequestId(null);
+        } else {
+          setRequestInboxOpen(false);
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [requestInboxOpen]);
+  }, [requestInboxOpen, selectedRequestId]);
 
   const hasTracks = MUSIC_TRACKS.length > 0;
   const visibleRequests = REQUESTS.filter((request) => requestFilter === 'all' || request.type === requestFilter);
+  const selectedRequest = REQUESTS.find((request) => request.id === selectedRequestId);
+  const selectedRequestDetails = selectedRequest ? REQUEST_DETAILS[selectedRequest.id] : null;
+
+  const closeRequestInbox = () => {
+    setRequestInboxOpen(false);
+    setSelectedRequestId(null);
+  };
 
   return (
     <div className="game-root" onPointerDown={() => { if (!bgmEnabled && hasTracks) { unlockAudio().catch(() => {}); } }}>
@@ -419,65 +537,227 @@ export default function App() {
           className="request-overlay"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) {
-              setRequestInboxOpen(false);
+              closeRequestInbox();
             }
           }}
         >
           <section className="request-dialog" role="dialog" aria-modal="true" aria-labelledby="request-title">
             <header className="request-dialog-header">
               <div>
-                <span className="request-eyebrow">MORI POST</span>
-                <h2 id="request-title">届いた依頼</h2>
-                <p>森のみんなから届いた依頼を確認しよう</p>
+                <span className="request-eyebrow">{selectedRequest ? 'REQUEST DETAIL' : 'MORI POST'}</span>
+                <h2 id="request-title">{selectedRequest ? '依頼の詳細' : '届いた依頼'}</h2>
+                <p>{selectedRequest ? selectedRequest.requester : '森のみんなから届いた依頼を確認しよう'}</p>
               </div>
               <button
                 type="button"
                 className="close-button request-close"
                 aria-label="依頼一覧を閉じる"
-                onClick={() => setRequestInboxOpen(false)}
+                onClick={closeRequestInbox}
               >
                 ×
               </button>
             </header>
 
-            <div className="request-tabs" role="tablist" aria-label="依頼の送り主で絞り込む">
-              {REQUEST_FILTERS.map((filter) => (
-                <button
-                  key={filter.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={requestFilter === filter.id}
-                  className={requestFilter === filter.id ? 'request-tab is-active' : 'request-tab'}
-                  onClick={() => setRequestFilter(filter.id)}
-                >
-                  {filter.label}
-                  {filter.id === 'all' && <span className="request-tab-count">2</span>}
+            {selectedRequest ? (
+              <div className="request-detail-view">
+                <button type="button" className="request-back" onClick={() => setSelectedRequestId(null)}>
+                  ‹ 依頼一覧へ戻る
                 </button>
-              ))}
-            </div>
-
-            <div className="request-list">
-              {visibleRequests.map((request) => (
-                <article className="request-card" key={request.id}>
-                  <div className={`request-avatar avatar-${request.type}`} aria-hidden="true">
-                    {request.avatar}
+                <div className="request-project-heading">
+                  <div className={`request-avatar avatar-${selectedRequest.type}`} aria-hidden="true">
+                    {selectedRequest.avatar}
                   </div>
-                  <div className="request-card-content">
+                  <div className="request-project-copy">
                     <div className="request-card-meta">
-                      <span>{request.requester}</span>
-                      <span className={request.status === '進行中' ? 'request-status is-progress' : 'request-status'}>
-                        {request.status}
+                      <span>{selectedRequest.requester}</span>
+                      <span className={selectedRequest.status === '進行中' ? 'request-status is-progress' : 'request-status'}>
+                        {selectedRequest.status}
                       </span>
                     </div>
-                    <h3>{request.title}</h3>
-                    <p>{request.description}</p>
+                    <h3>{selectedRequest.title}</h3>
+                    <p>{selectedRequestDetails.brief}</p>
                   </div>
-                  <span className="request-card-arrow" aria-hidden="true">›</span>
-                </article>
-              ))}
-              {visibleRequests.length === 0 && <p className="request-empty">この送り主からの依頼はありません。</p>}
-            </div>
-            <footer className="request-dialog-footer">依頼は全部で {REQUESTS.length} 件です</footer>
+                </div>
+
+                <div className="request-tabs request-detail-tabs" role="tablist" aria-label="依頼の詳細情報">
+                  {REQUEST_DETAIL_TABS.map((tab) => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={requestDetailTab === tab.id}
+                      className={requestDetailTab === tab.id ? 'request-tab is-active' : 'request-tab'}
+                      onClick={() => setRequestDetailTab(tab.id)}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="request-detail-content">
+                  {requestDetailTab === 'overview' && (
+                    <div className="request-overview-grid">
+                      <section className="request-detail-panel">
+                        <h4>依頼の概要</h4>
+                        <p>{selectedRequestDetails.brief}</p>
+                        <dl className="request-facts">
+                          <div><dt>依頼者</dt><dd>{selectedRequestDetails.client}</dd></div>
+                          <div><dt>優先度</dt><dd>{selectedRequestDetails.priority}</dd></div>
+                          <div><dt>ステータス</dt><dd>{selectedRequest.status}</dd></div>
+                        </dl>
+                      </section>
+                      <section className="request-detail-panel">
+                        <h4>今回の実装範囲</h4>
+                        <ul className="request-checklist">
+                          {selectedRequestDetails.requirements.map(([title]) => (
+                            <li key={title}><span aria-hidden="true">✓</span>{title}</li>
+                          ))}
+                        </ul>
+                      </section>
+                    </div>
+                  )}
+                  {requestDetailTab === 'overview' && selectedRequestDetails.sites && (
+                    <section className="request-detail-panel request-member-panel">
+                      <div className="request-section-heading">
+                        <div><span className="request-eyebrow">THREE INDIVIDUAL SITES</span><h4>3人それぞれのサイト</h4></div>
+                        <span className="request-schedule-note">個性に合わせて制作</span>
+                      </div>
+                      <div className="request-member-sites">
+                        {selectedRequestDetails.sites.map((site, index) => (
+                          <article className={`request-member-site member-${site.tone}`} key={site.tone}>
+                            <div className="request-member-site-topline">
+                              <span className="request-member-number">0{index + 1}</span>
+                              <span className="request-member-role">{site.role}</span>
+                            </div>
+                            <span className="request-member-owner">{site.owner}の依頼</span>
+                            <strong>{site.title}</strong>
+                            <p>{site.summary}</p>
+                          </article>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {requestDetailTab === 'specification' && (
+                    <section className="request-detail-panel request-spec-panel">
+                      <div className="request-section-heading">
+                        <div><span className="request-eyebrow">PROJECT SPEC</span><h4>機能・受け入れ条件</h4></div>
+                        <span className="request-status is-progress">仕様確認中</span>
+                      </div>
+                      {selectedRequestDetails.requirements.map(([title, description], index) => (
+                        <div className="request-spec-row" key={title}>
+                          <span className="request-spec-number">{String(index + 1).padStart(2, '0')}</span>
+                          <div><strong>{title}</strong><p>{description}</p></div>
+                        </div>
+                      ))}
+                    </section>
+                  )}
+
+                  {requestDetailTab === 'schedule' && (
+                    <section className="request-detail-panel request-schedule-panel">
+                      <div className="request-section-heading">
+                        <div><span className="request-eyebrow">PROJECT PLAN</span><h4>制作スケジュール</h4></div>
+                        <span className="request-schedule-note">工程ごとの進捗</span>
+                      </div>
+                      {selectedRequestDetails.schedule.map((item) => (
+                        <div className="request-schedule-row" key={item.phase}>
+                          <span className="request-schedule-phase">{item.phase}</span>
+                          <div className="request-schedule-track">
+                            <span className={`request-schedule-bar ${item.tone}`} style={{ width: `${Math.max(item.progress, 4)}%` }} />
+                          </div>
+                          <span className="request-schedule-status">{item.status}</span>
+                        </div>
+                      ))}
+                    </section>
+                  )}
+
+                  {requestDetailTab === 'minutes' && (
+                    <section className="request-detail-panel request-minutes-panel">
+                      <div className="request-section-heading">
+                        <div><span className="request-eyebrow">MEETING NOTES</span><h4>相談・議事録</h4></div>
+                        <span className="request-schedule-note">記録 {selectedRequestDetails.minutes.length} 件</span>
+                      </div>
+                      {selectedRequestDetails.minutes.map(([heading, body], index) => (
+                        <article className="request-minute" key={heading}>
+                          <span className="request-minute-index">0{index + 1}</span>
+                          <div><strong>{heading}</strong><p>{body}</p></div>
+                        </article>
+                      ))}
+                    </section>
+                  )}
+
+                  {requestDetailTab === 'deliverables' && (
+                    <section className="request-detail-panel">
+                      <div className="request-section-heading">
+                        <div><span className="request-eyebrow">DELIVERABLES</span><h4>成果物・公開先</h4></div>
+                        <span className="request-schedule-note">予定 {selectedRequestDetails.deliverables.length} 件</span>
+                      </div>
+                      <div className="request-deliverables-grid">
+                        {selectedRequestDetails.deliverables.map(([title, description], index) => (
+                          <article className="request-deliverable" key={title}>
+                            <span className={`request-deliverable-icon deliverable-tone-${index % 4}`} aria-hidden="true">
+                              {['▤', '▧', '▥', '▣'][index % 4]}
+                            </span>
+                            <strong>{title}</strong>
+                            <p>{description}</p>
+                            <span className="request-status">準備中</span>
+                          </article>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="request-tabs" role="tablist" aria-label="依頼の送り主で絞り込む">
+                  {REQUEST_FILTERS.map((filter) => (
+                    <button
+                      key={filter.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={requestFilter === filter.id}
+                      className={requestFilter === filter.id ? 'request-tab is-active' : 'request-tab'}
+                      onClick={() => setRequestFilter(filter.id)}
+                    >
+                      {filter.label}
+                      {filter.id === 'all' && <span className="request-tab-count">{REQUESTS.length}</span>}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="request-list">
+                  {visibleRequests.map((request) => (
+                    <button
+                      className="request-card"
+                      key={request.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedRequestId(request.id);
+                        setRequestDetailTab('overview');
+                      }}
+                    >
+                      <span className={`request-avatar avatar-${request.type}`} aria-hidden="true">
+                        {request.avatar}
+                      </span>
+                      <span className="request-card-content">
+                        <span className="request-card-meta">
+                          <span>{request.requester}</span>
+                          <span className={request.status === '進行中' ? 'request-status is-progress' : 'request-status'}>
+                            {request.status}
+                          </span>
+                        </span>
+                        <span className="request-card-title">{request.title}</span>
+                        <span className="request-card-description">{request.description}</span>
+                      </span>
+                      <span className="request-card-arrow" aria-hidden="true">›</span>
+                    </button>
+                  ))}
+                  {visibleRequests.length === 0 && <p className="request-empty">この送り主からの依頼はありません。</p>}
+                </div>
+                <footer className="request-dialog-footer">依頼は全部で {REQUESTS.length} 件です</footer>
+              </>
+            )}
           </section>
         </div>
       )}

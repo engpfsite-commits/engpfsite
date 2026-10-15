@@ -478,7 +478,7 @@ export function OpeningTitle({ introFinished }) {
 export function RequestInboxBeacon({ onClick }) {
   return (
     <Html
-      position={[0.2, 4.1, 2.6]}
+      position={[1.7, 4.1, 0.9]}
       center
       transform
       sprite
