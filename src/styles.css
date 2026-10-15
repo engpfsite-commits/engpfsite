@@ -569,6 +569,29 @@ button {
   line-height: 1.5;
 }
 
+.mascot-portrait {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.mascot-portrait canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.request-member-portrait {
+  height: 118px;
+  margin: 2px 0;
+}
+
+.request-type-portrait {
+  height: 124px;
+  margin: 1px 0;
+}
+
 .request-section-heading {
   display: flex;
   align-items: center;
@@ -1175,6 +1198,14 @@ button {
 
   .request-member-sites {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .request-member-portrait {
+    height: 150px;
+  }
+
+  .request-type-portrait {
+    height: 138px;
   }
 
   .request-detail-panel {

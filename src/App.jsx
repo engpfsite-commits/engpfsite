@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ForestScene from './components/ForestScene';
+import MascotPortrait from './components/MascotPortrait';
 import { MUSIC_TRACKS } from './audioTracks';
 
 const VOLUME_KEY = 'engpfsite-bgm-volume';
@@ -70,6 +71,8 @@ const REQUEST_DETAILS = {
         useCases: ['アイデアをすぐ形にしたい', '機能を先に試したい'],
         maintenance: '運用例：保守なし',
         tone: 'quick',
+        species: 'dog',
+        costume: 'everyday',
       },
       {
         id: 'crafted',
@@ -80,6 +83,8 @@ const REQUEST_DETAILS = {
         useCases: ['仕様書作成を練習したい', '継続的に運用したい'],
         maintenance: '運用例：保守あり',
         tone: 'crafted',
+        species: 'owl',
+        costume: 'researcher',
       },
       {
         id: 'technology',
@@ -90,6 +95,8 @@ const REQUEST_DETAILS = {
         useCases: ['新しい技術を試したい', '小規模な実験をしたい'],
         maintenance: '運用例：保守なし',
         tone: 'technology',
+        species: 'cat',
+        costume: 'researcher',
       },
       {
         id: 'creative',
@@ -100,6 +107,8 @@ const REQUEST_DETAILS = {
         useCases: ['創作の世界観を楽しみたい', '自由にアイデアを試したい'],
         maintenance: '運用例：保守なし',
         tone: 'creative',
+        species: 'giraffe',
+        costume: 'artist',
       },
     ],
     maintenance: {
@@ -155,6 +164,8 @@ const REQUEST_DETAILS = {
         title: 'ポートフォリオサイト',
         summary: 'プロフィール、スキル、制作実績、技術ブログをまとめて紹介。',
         tone: 'engineer',
+        species: 'dog',
+        costume: 'engineer',
       },
       {
         owner: 'うさぎ',
@@ -162,6 +173,8 @@ const REQUEST_DETAILS = {
         title: 'アイドル活動サイト',
         summary: 'プロフィール、お知らせ、ライブ予定、写真や動画を発信。',
         tone: 'idol',
+        species: 'rabbit',
+        costume: 'idol',
       },
       {
         owner: 'ねこ',
@@ -169,6 +182,8 @@ const REQUEST_DETAILS = {
         title: '作品ギャラリーサイト',
         summary: 'イラスト、漫画、動画、小説などの作品を展示。',
         tone: 'creator',
+        species: 'cat',
+        costume: 'creator',
       },
     ],
     requirements: [
@@ -700,6 +715,7 @@ export default function App() {
                               <span className="request-member-number">0{index + 1}</span>
                               <span className="request-member-role">{site.role}</span>
                             </div>
+                            <MascotPortrait species={site.species} costume={site.costume} className="request-member-portrait" />
                             <span className="request-member-owner">{site.owner}の依頼</span>
                             <strong>{site.title}</strong>
                             <p>{site.summary}</p>
@@ -723,6 +739,7 @@ export default function App() {
                               <span className="request-type-number">{index + 1}</span>
                               <div><h5>{type.title}</h5><span>{type.subtitle}</span></div>
                             </div>
+                            <MascotPortrait species={type.species} costume={type.costume} className="request-type-portrait" />
                             <p className="request-type-description">{type.description}</p>
                             <div className="request-type-subheading">進め方</div>
                             <ol className="request-type-steps">
