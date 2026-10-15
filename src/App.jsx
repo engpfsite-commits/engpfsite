@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ForestScene from './components/ForestScene';
 import MascotPortrait from './components/MascotPortrait';
-import { MUSIC_TRACKS } from './audioTracks';
+import { MUSIC_TRACKS, NATURE_TRACKS } from './audioTracks';
 
 const VOLUME_KEY = 'engpfsite-bgm-volume';
 const ENABLED_KEY = 'engpfsite-bgm-enabled';
+const AUDIO_MODE_KEY = 'engpfsite-audio-mode';
 const DEFAULT_VOLUME = 0.3;
 const REQUESTS = [
   {
@@ -231,19 +232,30 @@ const shuffle = (items) => {
   return next;
 };
 
+const tracksForMode = (mode) => (mode === 'nature' ? NATURE_TRACKS : MUSIC_TRACKS);
+
 export default function App() {
   const [selectedResident, setSelectedResident] = useState(null);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [bgmEnabled, setBgmEnabled] = useState(false);
   const [volume, setVolume] = useState(DEFAULT_VOLUME);
   const [currentTrack, setCurrentTrack] = useState('');
+  const [audioMode, setAudioMode] = useState(() => {
+    try {
+      return window.localStorage.getItem(AUDIO_MODE_KEY) === 'nature' ? 'nature' : 'bgm';
+    } catch (error) {
+      return 'bgm';
+    }
+  });
   const [requestInboxOpen, setRequestInboxOpen] = useState(false);
   const [requestFilter, setRequestFilter] = useState('all');
   const [selectedRequestId, setSelectedRequestId] = useState(null);
   const [requestDetailTab, setRequestDetailTab] = useState('overview');
   const audioRef = useRef(null);
-  const queueRef = useRef([]);
+  const audioModeRef = useRef(audioMode);
+  const queueRef = useRef({ bgm: [], nature: [] });
   const currentTrackRef = useRef('');
+  const currentModeRef = useRef(audioMode);
 
   const ensureAudio = useCallback(() => {
     if (!audioRef.current) {
@@ -269,50 +281,45 @@ export default function App() {
     }
   }, []);
 
-  const pickNextTrack = useCallback((previousTrack = currentTrackRef.current) => {
-    if (!MUSIC_TRACKS.length) {
-      setCurrentTrack('');
-      currentTrackRef.current = '';
+  const pickNextTrack = useCallback((mode = audioModeRef.current, previousTrack = '') => {
+    const tracks = tracksForMode(mode);
+    if (!tracks.length) {
       return null;
     }
 
-    if (MUSIC_TRACKS.length === 1) {
-      return MUSIC_TRACKS[0];
+    if (tracks.length === 1) {
+      return tracks[0];
     }
 
-    const remaining = queueRef.current.length ? [...queueRef.current] : shuffle(MUSIC_TRACKS.filter((track) => track !== previousTrack));
-
-    let nextTrack = null;
-    if (remaining.length > 0) {
-      nextTrack = remaining.find((track) => track !== previousTrack) || remaining[0];
-      queueRef.current = remaining.filter((track) => track !== nextTrack);
-    }
-
-    if (!nextTrack) {
-      const fallback = shuffle(MUSIC_TRACKS.filter((track) => track !== previousTrack));
-      nextTrack = fallback[0] || MUSIC_TRACKS[0];
-      queueRef.current = [];
-    }
-
+    const remaining = queueRef.current[mode].length
+      ? [...queueRef.current[mode]]
+      : shuffle(tracks.filter((track) => track !== previousTrack));
+    const nextTrack = remaining[0] || shuffle(tracks.filter((track) => track !== previousTrack))[0] || tracks[0];
+    queueRef.current[mode] = remaining.filter((track) => track !== nextTrack);
     return nextTrack;
   }, []);
 
-  const playTrack = useCallback(async (trackName, autoplay = false) => {
+  const playTrack = useCallback(async (trackName, autoplay = false, mode = audioModeRef.current) => {
     const audio = ensureAudio();
-    const safeName = trackName || pickNextTrack();
+    const safeName = trackName || pickNextTrack(mode);
+    const tracks = tracksForMode(mode);
 
     if (!safeName) {
       setCurrentTrack('');
       currentTrackRef.current = '';
+      audio.pause();
       return;
     }
 
-    const url = `/audio/${safeName}`;
+    const audioFolder = mode === 'nature' ? 'audio/soundEffects' : 'audio';
+    const normalizedName = safeName.normalize('NFC');
+    const url = `/${audioFolder}/${encodeURIComponent(normalizedName)}`;
     audio.src = url;
-    audio.loop = MUSIC_TRACKS.length <= 1;
+    audio.loop = tracks.length <= 1;
     audio.volume = 0.02;
     currentTrackRef.current = safeName;
-    setCurrentTrack(safeName);
+    currentModeRef.current = mode;
+    setCurrentTrack(normalizedName);
 
     if (!autoplay) {
       return;
@@ -331,7 +338,7 @@ export default function App() {
       };
       requestAnimationFrame(animateFade);
     } catch (error) {
-      console.warn('BGM autoplay was blocked by the browser.', error);
+      console.warn('Audio playback was blocked by the browser.', error);
       setBgmEnabled(false);
     }
   }, [ensureAudio, pickNextTrack, volume]);
@@ -356,27 +363,27 @@ export default function App() {
   }, [bgmEnabled, ensureAudio, volume]);
 
   const skipTrack = useCallback(async () => {
-    const nextTrack = pickNextTrack(currentTrackRef.current);
+    const nextTrack = pickNextTrack(audioMode, currentTrackRef.current);
     if (!nextTrack) {
       return;
     }
 
-    await playTrack(nextTrack, bgmEnabled);
-  }, [bgmEnabled, pickNextTrack, playTrack]);
+    await playTrack(nextTrack, bgmEnabled, audioMode);
+  }, [audioMode, bgmEnabled, pickNextTrack, playTrack]);
 
   const unlockAudio = useCallback(async () => {
-    if (!MUSIC_TRACKS.length) {
+    if (!tracksForMode(audioMode).length) {
       return;
     }
 
     const audio = ensureAudio();
 
     if (!currentTrackRef.current) {
-      const selected = pickNextTrack();
+      const selected = pickNextTrack(audioMode);
       if (!selected) {
         return;
       }
-      await playTrack(selected, true);
+      await playTrack(selected, true, audioMode);
       setBgmEnabled(true);
       return;
     }
@@ -385,13 +392,13 @@ export default function App() {
       await audio.play();
       setBgmEnabled(true);
     } catch (error) {
-      console.warn('BGM autoplay was blocked by the browser.', error);
+      console.warn('Audio autoplay was blocked by the browser.', error);
       setBgmEnabled(false);
     }
-  }, [ensureAudio, pickNextTrack, playTrack]);
+  }, [audioMode, ensureAudio, pickNextTrack, playTrack]);
 
   const toggleBgm = useCallback(async () => {
-    if (!MUSIC_TRACKS.length) {
+    if (!tracksForMode(audioMode).length) {
       return;
     }
 
@@ -404,11 +411,11 @@ export default function App() {
     }
 
     if (!currentTrackRef.current) {
-      const selected = pickNextTrack();
+      const selected = pickNextTrack(audioMode);
       if (!selected) {
         return;
       }
-      await playTrack(selected, true);
+      await playTrack(selected, true, audioMode);
       setBgmEnabled(true);
       return;
     }
@@ -420,7 +427,33 @@ export default function App() {
       console.warn('Unable to start the forest BGM.', error);
       setBgmEnabled(false);
     }
-  }, [bgmEnabled, ensureAudio, pickNextTrack, playTrack]);
+  }, [audioMode, bgmEnabled, ensureAudio, pickNextTrack, playTrack]);
+
+  const changeAudioMode = useCallback(async (nextMode) => {
+    if (nextMode === audioMode) {
+      return;
+    }
+
+    audioModeRef.current = nextMode;
+    setAudioMode(nextMode);
+    queueRef.current[nextMode] = [];
+    currentTrackRef.current = '';
+    setCurrentTrack('');
+
+    if (!bgmEnabled) {
+      audioRef.current?.pause();
+      currentModeRef.current = nextMode;
+      return;
+    }
+
+    const selected = pickNextTrack(nextMode);
+    if (selected) {
+      await playTrack(selected, true, nextMode);
+    } else {
+      audioRef.current?.pause();
+      setBgmEnabled(false);
+    }
+  }, [audioMode, bgmEnabled, pickNextTrack, playTrack]);
 
   useEffect(() => {
     try {
@@ -450,6 +483,14 @@ export default function App() {
 
   useEffect(() => {
     try {
+      window.localStorage.setItem(AUDIO_MODE_KEY, audioMode);
+    } catch (error) {
+      console.warn('Failed to persist audio mode.', error);
+    }
+  }, [audioMode]);
+
+  useEffect(() => {
+    try {
       window.localStorage.setItem(ENABLED_KEY, String(bgmEnabled));
     } catch (error) {
       console.warn('Failed to persist BGM enabled state.', error);
@@ -457,7 +498,8 @@ export default function App() {
   }, [bgmEnabled]);
 
   useEffect(() => {
-    if (!MUSIC_TRACKS.length) {
+    const tracks = tracksForMode(audioMode);
+    if (!tracks.length) {
       return undefined;
     }
 
@@ -467,45 +509,47 @@ export default function App() {
     }
 
     audio.onended = async () => {
-      if (MUSIC_TRACKS.length <= 1) {
+      if (!bgmEnabled) {
+        return;
+      }
+
+      if (tracks.length <= 1) {
         audio.currentTime = 0;
-        if (bgmEnabled) {
-          try {
-            await audio.play();
-          } catch (error) {
-            console.warn('Failed to loop the last BGM track.', error);
-          }
+        try {
+          await audio.play();
+        } catch (error) {
+          console.warn('Failed to loop the last audio track.', error);
         }
         return;
       }
 
-      const nextTrack = pickNextTrack(currentTrackRef.current);
+      const nextTrack = pickNextTrack(audioMode, currentTrackRef.current);
       if (nextTrack) {
-        await playTrack(nextTrack, bgmEnabled);
+        await playTrack(nextTrack, true, audioMode);
       }
     };
 
     return () => {
       audio.onended = null;
     };
-  }, [bgmEnabled, ensureAudio, pickNextTrack, playTrack]);
+  }, [audioMode, bgmEnabled, ensureAudio, pickNextTrack, playTrack]);
 
   useEffect(() => {
-    if (!MUSIC_TRACKS.length) {
+    if (!tracksForMode(audioMode).length) {
       return;
     }
 
     if (bgmEnabled && !currentTrackRef.current) {
-      const selected = pickNextTrack();
+      const selected = pickNextTrack(audioMode);
       if (selected) {
-        playTrack(selected, true).catch(() => setBgmEnabled(false));
+        playTrack(selected, true, audioMode).catch(() => setBgmEnabled(false));
       }
     }
 
     if (!bgmEnabled && audioRef.current) {
       audioRef.current.pause();
     }
-  }, [bgmEnabled, pickNextTrack, playTrack]);
+  }, [audioMode, bgmEnabled, pickNextTrack, playTrack]);
 
   useEffect(() => {
     if (!selectedResident && !selectedBuilding) {
@@ -539,7 +583,8 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [requestInboxOpen, selectedRequestId]);
 
-  const hasTracks = MUSIC_TRACKS.length > 0;
+  const hasTracks = tracksForMode(audioMode).length > 0;
+  const audioModeLabel = audioMode === 'nature' ? '自然音' : 'BGM';
   const visibleRequests = REQUESTS.filter((request) => requestFilter === 'all' || request.type === requestFilter);
   const selectedRequest = REQUESTS.find((request) => request.id === selectedRequestId);
   const selectedRequestDetails = selectedRequest ? REQUEST_DETAILS[selectedRequest.id] : null;
@@ -580,18 +625,42 @@ export default function App() {
       </div>
 
       <div className="bgm-controls">
+        <div
+          className="audio-mode-switch"
+          role="group"
+          aria-label="再生する音を選択"
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          <button
+            type="button"
+            className={audioMode === 'bgm' ? 'audio-mode-option is-active' : 'audio-mode-option'}
+            aria-pressed={audioMode === 'bgm'}
+            onClick={() => changeAudioMode('bgm')}
+          >
+            BGM
+          </button>
+          <button
+            type="button"
+            className={audioMode === 'nature' ? 'audio-mode-option is-active' : 'audio-mode-option'}
+            aria-pressed={audioMode === 'nature'}
+            onClick={() => changeAudioMode('nature')}
+          >
+            自然音
+          </button>
+        </div>
+
         <button
           type="button"
           className="bgm-toggle"
-          aria-label={bgmEnabled ? 'BGMを停止' : 'BGMを再生'}
+          aria-label={bgmEnabled ? `${audioModeLabel}を停止` : `${audioModeLabel}を再生`}
           onClick={toggleBgm}
           disabled={!hasTracks}
         >
-          {bgmEnabled ? '♫' : '♪'}
+          {audioMode === 'nature' ? '≋' : bgmEnabled ? '♫' : '♪'}
         </button>
 
         <div className="bgm-panel">
-          <div className="bgm-meta">{currentTrack || (hasTracks ? '待機中' : '音源なし')}</div>
+          <div className="bgm-meta">{currentTrack || (hasTracks ? `${audioModeLabel}を再生` : '音源なし')}</div>
 
           <div className="bgm-actions">
             <button type="button" className="bgm-action" onClick={restartCurrentTrack} disabled={!hasTracks || !currentTrack}>

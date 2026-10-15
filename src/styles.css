@@ -981,6 +981,36 @@ button {
   backdrop-filter: blur(10px);
 }
 
+.audio-mode-switch {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid rgba(30, 73, 44, 0.12);
+  border-radius: 12px;
+  background: rgba(224, 235, 219, 0.72);
+}
+
+.audio-mode-option {
+  min-width: 58px;
+  min-height: 30px;
+  padding: 5px 9px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #56705a;
+  font-size: 0.7rem;
+  font-weight: 750;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.audio-mode-option.is-active {
+  background: #fffdf5;
+  color: #365b3e;
+  box-shadow: 0 1px 4px rgba(54, 67, 45, 0.15);
+}
+
 .bgm-toggle {
   width: 40px;
   height: 40px;
@@ -1267,8 +1297,21 @@ button {
 
   .bgm-controls {
     top: 12px;
-    right: 12px;
-    padding: 8px 10px;
+    right: 8px;
+    gap: 5px;
+    padding: 8px;
+  }
+
+  .audio-mode-switch {
+    gap: 1px;
+    padding: 2px;
+  }
+
+  .audio-mode-option {
+    min-width: 48px;
+    min-height: 30px;
+    padding: 4px 5px;
+    font-size: 0.63rem;
   }
 
   .bgm-slider-wrap {
