@@ -5,6 +5,32 @@ import { MUSIC_TRACKS } from './audioTracks';
 const VOLUME_KEY = 'engpfsite-bgm-volume';
 const ENABLED_KEY = 'engpfsite-bgm-enabled';
 const DEFAULT_VOLUME = 0.3;
+const REQUESTS = [
+  {
+    id: 'site-creator',
+    type: 'creator',
+    requester: 'サイト制作者からの依頼',
+    title: '森のカフェを紹介するサイト',
+    description: 'メニューや営業時間、森の雰囲気が伝わるWebサイトを作ってほしい！',
+    status: '進行中',
+    avatar: '制',
+  },
+  {
+    id: 'friends',
+    type: 'friends',
+    requester: '仲良しトリオからの依頼',
+    title: '3人の個性を伝える作品紹介サイト',
+    description: 'それぞれの活動や作品を紹介できる、楽しいサイトを一緒に作ってほしい！',
+    status: '未着手',
+    avatar: '3人',
+  },
+];
+
+const REQUEST_FILTERS = [
+  { id: 'all', label: 'すべて' },
+  { id: 'creator', label: 'サイト制作者' },
+  { id: 'friends', label: '仲良しトリオ' },
+];
 
 const shuffle = (items) => {
   const next = [...items];
@@ -21,6 +47,8 @@ export default function App() {
   const [bgmEnabled, setBgmEnabled] = useState(false);
   const [volume, setVolume] = useState(DEFAULT_VOLUME);
   const [currentTrack, setCurrentTrack] = useState('');
+  const [requestInboxOpen, setRequestInboxOpen] = useState(false);
+  const [requestFilter, setRequestFilter] = useState('all');
   const audioRef = useRef(null);
   const queueRef = useRef([]);
   const currentTrackRef = useRef('');
@@ -300,7 +328,23 @@ export default function App() {
     return () => window.clearTimeout(timer);
   }, [selectedResident, selectedBuilding]);
 
+  useEffect(() => {
+    if (!requestInboxOpen) {
+      return undefined;
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setRequestInboxOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [requestInboxOpen]);
+
   const hasTracks = MUSIC_TRACKS.length > 0;
+  const visibleRequests = REQUESTS.filter((request) => requestFilter === 'all' || request.type === requestFilter);
 
   return (
     <div className="game-root" onPointerDown={() => { if (!bgmEnabled && hasTracks) { unlockAudio().catch(() => {}); } }}>
@@ -324,6 +368,7 @@ export default function App() {
             unlockAudio().catch(() => {});
           }
         }}
+        onRequestInboxOpen={() => setRequestInboxOpen(true)}
       />
 
       <div className="controls-hint">
@@ -368,6 +413,74 @@ export default function App() {
           </label>
         </div>
       </div>
+
+      {requestInboxOpen && (
+        <div
+          className="request-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setRequestInboxOpen(false);
+            }
+          }}
+        >
+          <section className="request-dialog" role="dialog" aria-modal="true" aria-labelledby="request-title">
+            <header className="request-dialog-header">
+              <div>
+                <span className="request-eyebrow">MORI POST</span>
+                <h2 id="request-title">届いた依頼</h2>
+                <p>森のみんなから届いた依頼を確認しよう</p>
+              </div>
+              <button
+                type="button"
+                className="close-button request-close"
+                aria-label="依頼一覧を閉じる"
+                onClick={() => setRequestInboxOpen(false)}
+              >
+                ×
+              </button>
+            </header>
+
+            <div className="request-tabs" role="tablist" aria-label="依頼の送り主で絞り込む">
+              {REQUEST_FILTERS.map((filter) => (
+                <button
+                  key={filter.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={requestFilter === filter.id}
+                  className={requestFilter === filter.id ? 'request-tab is-active' : 'request-tab'}
+                  onClick={() => setRequestFilter(filter.id)}
+                >
+                  {filter.label}
+                  {filter.id === 'all' && <span className="request-tab-count">2</span>}
+                </button>
+              ))}
+            </div>
+
+            <div className="request-list">
+              {visibleRequests.map((request) => (
+                <article className="request-card" key={request.id}>
+                  <div className={`request-avatar avatar-${request.type}`} aria-hidden="true">
+                    {request.avatar}
+                  </div>
+                  <div className="request-card-content">
+                    <div className="request-card-meta">
+                      <span>{request.requester}</span>
+                      <span className={request.status === '進行中' ? 'request-status is-progress' : 'request-status'}>
+                        {request.status}
+                      </span>
+                    </div>
+                    <h3>{request.title}</h3>
+                    <p>{request.description}</p>
+                  </div>
+                  <span className="request-card-arrow" aria-hidden="true">›</span>
+                </article>
+              ))}
+              {visibleRequests.length === 0 && <p className="request-empty">この送り主からの依頼はありません。</p>}
+            </div>
+            <footer className="request-dialog-footer">依頼は全部で {REQUESTS.length} 件です</footer>
+          </section>
+        </div>
+      )}
 
       {selectedResident && (
         <aside className="talk-window" aria-live="polite">

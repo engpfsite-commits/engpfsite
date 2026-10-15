@@ -1,4 +1,4 @@
-import { Instances, Instance, RoundedBox, Text } from '@react-three/drei';
+import { Html, Instances, Instance, RoundedBox, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
@@ -472,6 +472,28 @@ export function OpeningTitle({ introFinished }) {
         <meshStandardMaterial color="#e89d75" roughness={0.88} flatShading />
       </mesh>
     </group>
+  );
+}
+
+export function RequestInboxBeacon({ onClick }) {
+  return (
+    <Html
+      position={[0.2, 4.1, 2.6]}
+      center
+      transform
+      sprite
+      distanceFactor={10}
+      zIndexRange={[30, 0]}
+    >
+      <button className="request-world-button" type="button" onClick={onClick}>
+        <span className="request-envelope" aria-hidden="true">✉</span>
+        <span className="request-world-copy">
+          <strong>届いた依頼</strong>
+          <small>依頼を確認する</small>
+        </span>
+        <span className="request-world-count" aria-label="未確認2件">2</span>
+      </button>
+    </Html>
   );
 }
 

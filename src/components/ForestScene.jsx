@@ -14,6 +14,7 @@ import {
   IslandTerrain,
   OceanSurface,
   OpeningTitle,
+  RequestInboxBeacon,
   VillageProps,
   VillageHouse,
   Waterfall,
@@ -168,7 +169,7 @@ function ForestGrass() {
   );
 }
 
-function ForestWorld({ onResidentClick, onBuildingClick, onUserGesture, introFinished, onIntroComplete }) {
+function ForestWorld({ onResidentClick, onBuildingClick, onUserGesture, onRequestInboxOpen, introFinished, onIntroComplete }) {
   const controlsRef = useRef(null);
   const introStartRef = useRef(null);
   const introPositionRef = useRef(new THREE.Vector3());
@@ -348,6 +349,8 @@ function ForestWorld({ onResidentClick, onBuildingClick, onUserGesture, introFin
           }}
         />
 
+        {introFinished && <RequestInboxBeacon onClick={onRequestInboxOpen} />}
+
         <mesh
           position={[0, 0.025, 0]}
           rotation={[-Math.PI / 2, 0, 0]}
@@ -391,7 +394,7 @@ function ForestWorld({ onResidentClick, onBuildingClick, onUserGesture, introFin
   );
 }
 
-export default function ForestScene({ onResidentClick, onBuildingClick, onUserGesture }) {
+export default function ForestScene({ onResidentClick, onBuildingClick, onUserGesture, onRequestInboxOpen }) {
   const [introFinished, setIntroFinished] = useState(false);
 
   return (
@@ -406,6 +409,7 @@ export default function ForestScene({ onResidentClick, onBuildingClick, onUserGe
           onResidentClick={onResidentClick}
           onBuildingClick={onBuildingClick}
           onUserGesture={onUserGesture}
+          onRequestInboxOpen={onRequestInboxOpen}
           introFinished={introFinished}
           onIntroComplete={() => setIntroFinished(true)}
         />
