@@ -586,6 +586,13 @@ button {
   margin: 0;
 }
 
+.request-examples-intro {
+  margin: -3px 0 12px;
+  color: #716956;
+  font-size: 0.74rem;
+  line-height: 1.55;
+}
+
 .request-schedule-note {
   color: #927c5e;
   font-size: 0.7rem;
@@ -617,6 +624,193 @@ button {
   color: #746a58;
   font-size: 0.75rem;
   line-height: 1.55;
+}
+
+.request-type-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.request-type-card {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid #e7d9c3;
+  border-radius: 13px;
+  background: #fffefa;
+}
+
+.type-quick { background: #fff0f0; border-color: #efc6c5; }
+.type-crafted { background: #edf5fc; border-color: #c9dfef; }
+.type-technology { background: #eef7ed; border-color: #cfe3ca; }
+.type-creative { background: #fff4e9; border-color: #f0d0ad; }
+
+.request-type-heading {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.request-type-number {
+  display: grid;
+  place-items: center;
+  width: 31px;
+  height: 31px;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  background: #e36c7c;
+  color: white;
+  font-size: 0.84rem;
+  font-weight: 850;
+  box-shadow: 0 1px 4px rgba(85, 58, 35, 0.16);
+}
+
+.type-crafted .request-type-number { background: #4e9ade; }
+.type-technology .request-type-number { background: #46a96d; }
+.type-creative .request-type-number { background: #ee8950; }
+
+.request-type-heading h5 {
+  margin: 0;
+  color: #46382a;
+  font-size: 0.79rem;
+  line-height: 1.35;
+}
+
+.request-type-heading div > span {
+  display: block;
+  margin-top: 2px;
+  color: #867158;
+  font-size: 0.64rem;
+  line-height: 1.4;
+}
+
+.request-type-description {
+  min-height: 3.2em;
+  margin: 0;
+  color: #6d604d;
+  font-size: 0.7rem;
+  line-height: 1.55;
+}
+
+.request-type-subheading {
+  padding-top: 6px;
+  border-top: 1px solid rgba(125, 100, 69, 0.16);
+  color: #725b3f;
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.request-type-steps,
+.request-type-use-cases {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding-left: 19px;
+  color: #5e5547;
+  font-size: 0.67rem;
+  line-height: 1.45;
+}
+
+.request-type-steps li::marker {
+  color: #ac784d;
+  font-weight: 850;
+}
+
+.request-type-maintenance {
+  justify-self: start;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  color: #746344;
+  font-size: 0.62rem;
+  font-weight: 750;
+}
+
+.request-maintenance-modes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.request-maintenance-mode {
+  padding: 15px;
+  border: 1px solid #ead8c7;
+  border-radius: 13px;
+  background: #fff1ef;
+}
+
+.maintenance-ongoing {
+  border-color: #cfe0c3;
+  background: #eff7e9;
+}
+
+.request-maintenance-mode h5 {
+  margin: 0 0 7px;
+  color: #4c3b2c;
+  font-size: 0.82rem;
+}
+
+.request-maintenance-mode p,
+.request-maintenance-mode li {
+  color: #6f624f;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.request-maintenance-mode p {
+  margin: 0;
+}
+
+.request-maintenance-mode ul {
+  display: grid;
+  gap: 4px;
+  margin: 9px 0 0;
+  padding-left: 18px;
+}
+
+.request-maintenance-flow-heading {
+  margin: 20px 0 10px;
+}
+
+.request-maintenance-flow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: maintenance-step;
+}
+
+.request-maintenance-flow li {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 7px;
+  min-height: 82px;
+  padding: 10px;
+  border: 1px solid #e7ddcb;
+  border-radius: 11px;
+  background: #fffdf7;
+  color: #645743;
+  font-size: 0.67rem;
+  line-height: 1.45;
+}
+
+.request-maintenance-flow li > span {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #e8d1a2;
+  color: #674d31;
+  font-size: 0.68rem;
+  font-weight: 850;
 }
 
 .request-schedule-panel {
@@ -964,6 +1158,19 @@ button {
 
   .request-overview-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .request-type-grid,
+  .request-maintenance-modes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .request-type-description {
+    min-height: 0;
+  }
+
+  .request-maintenance-flow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .request-member-sites {

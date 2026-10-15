@@ -34,6 +34,15 @@ const REQUEST_DETAIL_TABS = [
   { id: 'deliverables', label: '成果物' },
 ];
 
+const SITE_CREATOR_DETAIL_TABS = [
+  { id: 'overview', label: '概要' },
+  { id: 'specification', label: '依頼の例' },
+  { id: 'maintenance', label: '保守方針' },
+  { id: 'schedule', label: 'スケジュール' },
+  { id: 'minutes', label: '議事録' },
+  { id: 'deliverables', label: '成果物' },
+];
+
 const REQUEST_DETAILS = {
   'site-creator': {
     client: 'サイト制作者',
@@ -51,6 +60,67 @@ const REQUEST_DETAILS = {
       ['成果物', '完成したサイトや画像、公開先を案件に紐づけて残す'],
       ['どうぶつ管理', '住民のプロフィールと依頼履歴を確認・編集する'],
     ],
+    requestExamples: [
+      {
+        id: 'quick',
+        title: 'とりあえず完成させたい',
+        subtitle: 'バイブコーディングでサクッと！',
+        description: 'まずは動くものを早く公開。細かなデザイン調整は後から進める。',
+        steps: ['依頼動物と内容を決める', 'バイブコーディングで実装', '完成したらすぐ公開'],
+        useCases: ['アイデアをすぐ形にしたい', '機能を先に試したい'],
+        maintenance: '運用例：保守なし',
+        tone: 'quick',
+      },
+      {
+        id: 'crafted',
+        title: '作り込んだサイトが欲しい',
+        subtitle: '実装重視でスキルアップ！',
+        description: '要件定義、仕様書、スケジュールを整え、実務に近い流れで制作する。',
+        steps: ['依頼と要件を整理', '仕様書・設計を作成', '実装・テスト・公開', '公開後も改善'],
+        useCases: ['仕様書作成を練習したい', '継続的に運用したい'],
+        maintenance: '運用例：保守あり',
+        tone: 'crafted',
+      },
+      {
+        id: 'technology',
+        title: '特定の技術を試したい',
+        subtitle: '学習・実験用サイト',
+        description: 'Python、データベース、APIなど、学びたい技術を使って小さく検証する。',
+        steps: ['試す技術と依頼を決める', '実装して動作を確認', '学びを記録して公開'],
+        useCases: ['新しい技術を試したい', '小規模な実験をしたい'],
+        maintenance: '運用例：保守なし',
+        tone: 'technology',
+      },
+      {
+        id: 'creative',
+        title: '遊びたい・創作したい',
+        subtitle: 'メルヘンな依頼で楽しもう！',
+        description: 'どうぶつたちのユニークな依頼をもとに、自由な発想でサイトを作る。',
+        steps: ['依頼動物とテーマを決める', '自由にデザイン・実装', '完成した作品を公開'],
+        useCases: ['創作の世界観を楽しみたい', '自由にアイデアを試したい'],
+        maintenance: '運用例：保守なし',
+        tone: 'creative',
+      },
+    ],
+    maintenance: {
+      modes: [
+        {
+          id: 'no-maintenance',
+          title: '保守なし（作りっぱなし）',
+          summary: '完成した状態で公開し、定期的な更新は行わない。',
+          useCases: ['小さなサイトや技術実験', 'まず完成・公開を優先したい'],
+          tone: 'oneoff',
+        },
+        {
+          id: 'ongoing',
+          title: '保守あり（継続運用）',
+          summary: '公開後も追加依頼や変更に対応し、記録を残しながら改善する。',
+          useCases: ['継続して使うサイト', '変更履歴や学びを残したい'],
+          tone: 'ongoing',
+        },
+      ],
+      flow: ['追加の依頼が届く', '内容を確認して仕様を更新', '修正・機能追加を実装', 'やり取りと変更履歴を保存'],
+    },
     schedule: [
       { phase: '依頼・要件の整理', status: '完了', progress: 100, tone: 'complete' },
       { phase: '画面設計・仕様書', status: '進行中', progress: 68, tone: 'active' },
@@ -458,6 +528,7 @@ export default function App() {
   const visibleRequests = REQUESTS.filter((request) => requestFilter === 'all' || request.type === requestFilter);
   const selectedRequest = REQUESTS.find((request) => request.id === selectedRequestId);
   const selectedRequestDetails = selectedRequest ? REQUEST_DETAILS[selectedRequest.id] : null;
+  const detailTabs = selectedRequestId === 'site-creator' ? SITE_CREATOR_DETAIL_TABS : REQUEST_DETAIL_TABS;
 
   const closeRequestInbox = () => {
     setRequestInboxOpen(false);
@@ -580,7 +651,7 @@ export default function App() {
                 </div>
 
                 <div className="request-tabs request-detail-tabs" role="tablist" aria-label="依頼の詳細情報">
-                  {REQUEST_DETAIL_TABS.map((tab) => (
+                  {detailTabs.map((tab) => (
                     <button
                       key={tab.id}
                       type="button"
@@ -638,7 +709,35 @@ export default function App() {
                     </section>
                   )}
 
-                  {requestDetailTab === 'specification' && (
+                  {requestDetailTab === 'specification' && (selectedRequestDetails.requestExamples ? (
+                    <section className="request-detail-panel request-type-panel">
+                      <div className="request-section-heading">
+                        <div><span className="request-eyebrow">REQUEST EXAMPLES</span><h4>このサイトに届く依頼の例</h4></div>
+                        <span className="request-schedule-note">目的に合わせて制作を進行</span>
+                      </div>
+                      <p className="request-examples-intro">依頼の内容に合わせて要件を整理し、制作から公開後の運用までを管理するサイトです。</p>
+                      <div className="request-type-grid">
+                        {selectedRequestDetails.requestExamples.map((type, index) => (
+                          <article className={`request-type-card type-${type.tone}`} key={type.id}>
+                            <div className="request-type-heading">
+                              <span className="request-type-number">{index + 1}</span>
+                              <div><h5>{type.title}</h5><span>{type.subtitle}</span></div>
+                            </div>
+                            <p className="request-type-description">{type.description}</p>
+                            <div className="request-type-subheading">進め方</div>
+                            <ol className="request-type-steps">
+                              {type.steps.map((step) => <li key={step}>{step}</li>)}
+                            </ol>
+                            <div className="request-type-subheading">こんな時に使う</div>
+                            <ul className="request-type-use-cases">
+                              {type.useCases.map((useCase) => <li key={useCase}>{useCase}</li>)}
+                            </ul>
+                            <span className="request-type-maintenance">{type.maintenance}</span>
+                          </article>
+                        ))}
+                      </div>
+                    </section>
+                  ) : (
                     <section className="request-detail-panel request-spec-panel">
                       <div className="request-section-heading">
                         <div><span className="request-eyebrow">PROJECT SPEC</span><h4>機能・受け入れ条件</h4></div>
@@ -650,6 +749,32 @@ export default function App() {
                           <div><strong>{title}</strong><p>{description}</p></div>
                         </div>
                       ))}
+                    </section>
+                  ))}
+
+                  {requestDetailTab === 'maintenance' && selectedRequestDetails.maintenance && (
+                    <section className="request-detail-panel request-maintenance-panel">
+                      <div className="request-section-heading">
+                        <div><span className="request-eyebrow">MAINTENANCE PLAN</span><h4>保守の仕組み</h4></div>
+                        <span className="request-schedule-note">依頼ごとに選択</span>
+                      </div>
+                      <div className="request-maintenance-modes">
+                        {selectedRequestDetails.maintenance.modes.map((mode) => (
+                          <article className={`request-maintenance-mode maintenance-${mode.tone}`} key={mode.id}>
+                            <h5>{mode.title}</h5>
+                            <p>{mode.summary}</p>
+                            <ul>{mode.useCases.map((useCase) => <li key={useCase}>{useCase}</li>)}</ul>
+                          </article>
+                        ))}
+                      </div>
+                      <div className="request-section-heading request-maintenance-flow-heading">
+                        <div><span className="request-eyebrow">WHEN A NEW REQUEST ARRIVES</span><h4>保守ありの場合の流れ</h4></div>
+                      </div>
+                      <ol className="request-maintenance-flow">
+                        {selectedRequestDetails.maintenance.flow.map((step, index) => (
+                          <li key={step}><span>{index + 1}</span>{step}</li>
+                        ))}
+                      </ol>
                     </section>
                   )}
 
